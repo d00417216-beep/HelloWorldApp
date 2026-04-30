@@ -28,7 +28,7 @@ pipeline {
     }
     stage('Docker Push') {
       steps {
-        withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+        withCredentials([usernamePassword(credentialsId: 'my-docker-hub-credentials-id', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
           // login to DockerHub
           sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
           // tag the image with your DockerHub repo name
@@ -40,3 +40,4 @@ pipeline {
     }
   }
 }
+
