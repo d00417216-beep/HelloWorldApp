@@ -1,58 +1,42 @@
 pipeline {
-    agent any
-
-    environment {
-        GIT_REPOSITORY_URL = 'https://github.com/d00417216-beep/HelloWorldApp.git'
-        DOCKER_IMAGE_NAME = 'docker1doc/HelloWorld'
-        IMAGE_TAG = '1.0'
+  agent any
+  stages {
+    stage('Checkout') {
+      steps {
+        git branch: 'main', url: 'https://github.com/d00417216-beep/HelloWorldApp.git'
+      }
     }
-
-    stages {
-        stage('Clone Repository') {
-            steps {
-                script {
-                    try {
-                        git branch: 'main', url: GIT_REPOSITORY_URL
-                    } catch (Exception e) {
-                        echo "Failed to clone repository: ${e.message}"
-                        error "Failed to clone repository"
-                    }
-                }
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    try {
-                        docker.build("${DOCKER_IMAGE_NAME}:${IMAGE_TAG}")
-                    } catch (Exception e) {
-                        echo "Failed to build Docker image: ${e.message}"
-                        error "Failed to build Docker image"
-                    }
-                }
-            }
-        }
-
-        stage('Push to DockerHub') {
-            steps {
-                script {
-                    try {
-                        withCredentials([usernamePassword(credentialsId: 'my-docker-hub-credentials-id', 
-                                                         usernameVariable: 'DOCKER_USERNAME', 
-                                                         passwordVariable: 'DOCKER_PASSWORD')]) {
-                            // Explicit login before push
-                            sh """
-                            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-                            docker push ${DOCKER_IMAGE_NAME}:${IMAGE_TAG}
-                            """
-                        }
-                    } catch (Exception e) {
-                        echo "Failed to push Docker image to registry: ${e.message}"
-                        error "Failed to push Docker image"
-                    }
-                }
-            }
-        }
+    stage('Compile') {
+      steps {
+        sh 'javac helloworld.java'
+      }
     }
+    stage('Run') {
+      steps {
+        sh 'java helloworld'
+      }
+    }
+    stage('Docker Build') {
+      steps {
+        sh 'docker build -t java-hello-world:latest .'
+      }
+    }
+    stage('Docker Run') {
+      steps {
+        sh 'docker run --rm java-hello-world:latest'
+      }
+    }
+    stage('Docker Push') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+          // login to DockerHub
+          sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+          // tag the image with your DockerHub repo name
+          sh 'docker tag java-hello-world:latest $DOCKER_USER/helloworldapp:latest'
+          // push the image
+          sh 'docker push $DOCKER_USER/helloworldapp:latest'
+        }
+      }
+    }
+  }
 }
