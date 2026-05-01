@@ -28,7 +28,7 @@ pipeline {
     }
     stage('Docker Push') {
       steps {
-        withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+        withCredentials([usernamePassword(credentialsId: 'my-docker-hub-credentials-id', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
           sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
           sh 'docker tag java-hello-world:latest $DOCKER_USER/helloworldapp:latest'
           sh 'docker push $DOCKER_USER/helloworldapp:latest'
@@ -44,4 +44,3 @@ pipeline {
     }
   }
 }
-
