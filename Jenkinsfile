@@ -37,6 +37,7 @@ pipeline {
     }
     stage('Kubernetes Deploy') {
       steps {
+        // Uses kubeconfig credentials stored in Jenkins
         withKubeConfig([credentialsId: 'kubeconfig-credentials']) {
           sh 'kubectl apply -f deployment.yaml'
         }
@@ -44,3 +45,4 @@ pipeline {
     }
   }
 }
+
